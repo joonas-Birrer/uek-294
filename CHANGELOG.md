@@ -12,7 +12,7 @@
 - Environment configuration properly structured
 - Route redirects validated end-to-end
 
-## v1.1.0
+## v1.1.0 (2026-03-28)
 ### Added
 - Todo list with role-based visibility (admin sees inactive, user does not)
 - Todo create form (no popup, dedicated page)
@@ -23,7 +23,7 @@
 - Inactive guard: redirects user role to /todo/list for inactive todos
 - OpenAPI generator configuration
 
-## v1.0.0
+## v1.0.0 (2026-03-20)
 ### Added
 - Project scaffold (Angular 17, standalone components)
 - Docker Compose: Keycloak v1.1.52 + Todo API v1.1.51
