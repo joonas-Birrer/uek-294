@@ -7,7 +7,7 @@
 }
 
 .row.even {
-  background: #ccc;
+  background: #f1f1f1;
 }
 
 .cell {
@@ -60,11 +60,11 @@
 }
 
 .state.open {
-  background: #8df18b;
+  background: #72d572;
 }
 
 .state.closed {
-  background: #ff8888;
+  background: #ff6b6b;
 }
 
 .state.closed .state-icon {
@@ -77,6 +77,5 @@
 }
 
 .actions .mat-mdc-icon-button {
-  color: #3f3f3f;
+  color: #2f2f2f;
 }
-
