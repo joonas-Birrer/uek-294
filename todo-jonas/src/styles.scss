@@ -1,0 +1,20 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+  background: #f7f7f7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+.mat-icon {
+  font-family: 'Material Icons', sans-serif;
+}
+
