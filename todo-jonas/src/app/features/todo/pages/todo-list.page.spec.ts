@@ -1,20 +1,27 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatDialog } from '@angular/material/dialog';
 import { TodoListPageComponent } from './todo-list.page';
 import { TodoService } from '../data/todo.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { TodoHeaderComponent } from '../components/todo-header/todo-header.component';
 import { TodoRowComponent } from '../components/todo-row/todo-row.component';
 import { of } from 'rxjs';
+import { vi } from 'vitest';
 
 describe('TodoListPageComponent', () => {
   let component: TodoListPageComponent;
   let fixture: ComponentFixture<TodoListPageComponent>;
-  let mockTodoService: jasmine.SpyObj<TodoService>;
-  let mockRouter: jasmine.SpyObj<Router>;
-  let mockAuthService: jasmine.SpyObj<AuthService>;
-  let mockDialog: jasmine.SpyObj<MatDialog>;
+  let mockTodoService: {
+    load: ReturnType<typeof vi.fn>;
+    toggleClosed: ReturnType<typeof vi.fn>;
+    remove: ReturnType<typeof vi.fn>;
+    items: ReturnType<typeof vi.fn>;
+    loading: ReturnType<typeof vi.fn>;
+  };
+  let mockRouter: { navigateByUrl: ReturnType<typeof vi.fn> };
+  let mockAuthService: { isAdmin: ReturnType<typeof vi.fn> };
+  let mockDialog: { open: ReturnType<typeof vi.fn> };
 
   const mockTodos = [
     {
@@ -41,23 +48,22 @@ describe('TodoListPageComponent', () => {
   ];
 
   beforeEach(async () => {
-    mockTodoService = jasmine.createSpyObj('TodoService', [
-      'load',
-      'toggleClosed',
-      'remove',
-      'items',
-    ]);
-    mockRouter = jasmine.createSpyObj('Router', ['navigateByUrl']);
-    mockAuthService = jasmine.createSpyObj('AuthService', [], {
-      isAdmin: jasmine.createSpy('isAdmin').and.returnValue(true),
-    });
-    mockDialog = jasmine.createSpyObj('MatDialog', ['open']);
-
-    mockTodoService.load.and.returnValue(Promise.resolve());
-    mockTodoService.toggleClosed.and.returnValue(Promise.resolve());
-    mockTodoService.remove.and.returnValue(Promise.resolve());
-    mockTodoService.items.and.returnValue(mockTodos);
-    mockRouter.navigateByUrl.and.returnValue(Promise.resolve(true));
+    mockTodoService = {
+      load: vi.fn().mockResolvedValue(undefined),
+      toggleClosed: vi.fn().mockResolvedValue(undefined),
+      remove: vi.fn().mockResolvedValue(undefined),
+      items: vi.fn().mockReturnValue(mockTodos),
+      loading: vi.fn().mockReturnValue(false),
+    };
+    mockRouter = {
+      navigateByUrl: vi.fn().mockResolvedValue(true),
+    };
+    mockAuthService = {
+      isAdmin: vi.fn().mockReturnValue(true),
+    };
+    mockDialog = {
+      open: vi.fn(),
+    };
 
     await TestBed.configureTestingModule({
       imports: [
@@ -85,7 +91,7 @@ describe('TodoListPageComponent', () => {
     it('should load todos on init', async () => {
       await component.ngOnInit();
 
-      expect(mockTodoService.load).toHaveBeenCalled();
+      expect(mockTodoService.load).toHaveBeenCalledWith(true);
     });
   });
 
@@ -93,7 +99,7 @@ describe('TodoListPageComponent', () => {
     it('should reload todos', async () => {
       await component.refresh();
 
-      expect(mockTodoService.load).toHaveBeenCalled();
+      expect(mockTodoService.load).toHaveBeenCalledWith(true);
     });
   });
 
@@ -105,8 +111,8 @@ describe('TodoListPageComponent', () => {
     });
 
     it('should show alert on error', async () => {
-      spyOn(window, 'alert');
-      mockTodoService.toggleClosed.and.returnValue(Promise.reject(new Error('API Error')));
+      vi.spyOn(window, 'alert').mockImplementation(() => undefined);
+      mockTodoService.toggleClosed.mockRejectedValue(new Error('API Error'));
 
       await component.toggleClosed({ id: 'test-1', checked: true });
 
@@ -115,17 +121,13 @@ describe('TodoListPageComponent', () => {
   });
 
   describe('remove', () => {
-    beforeEach(() => {
-      mockTodoService.items = jasmine.createSpy('items').and.returnValue(mockTodos);
-    });
-
     it('should show confirmation dialog and delete if confirmed', async () => {
       const mockDialogRef = {
         afterClosed: () => of(true),
       } as any;
 
-      mockDialog.open.and.returnValue(mockDialogRef);
-      mockTodoService.load.and.returnValue(Promise.resolve());
+      mockDialog.open.mockReturnValue(mockDialogRef);
+      mockTodoService.load.mockResolvedValue(undefined);
 
       await component.remove('test-1');
 
@@ -139,7 +141,7 @@ describe('TodoListPageComponent', () => {
         afterClosed: () => of(false),
       } as any;
 
-      mockDialog.open.and.returnValue(mockDialogRef);
+      mockDialog.open.mockReturnValue(mockDialogRef);
 
       await component.remove('test-1');
 
@@ -147,7 +149,7 @@ describe('TodoListPageComponent', () => {
     });
 
     it('should return early if not admin', async () => {
-      (mockAuthService.isAdmin as any).and.returnValue(false);
+      mockAuthService.isAdmin.mockReturnValue(false);
 
       await component.remove('test-1');
 
@@ -156,13 +158,13 @@ describe('TodoListPageComponent', () => {
     });
 
     it('should show alert on deletion error', async () => {
-      spyOn(window, 'alert');
+      vi.spyOn(window, 'alert').mockImplementation(() => undefined);
       const mockDialogRef = {
         afterClosed: () => of(true),
       } as any;
 
-      mockDialog.open.and.returnValue(mockDialogRef);
-      mockTodoService.remove.and.returnValue(Promise.reject(new Error('API Error')));
+      mockDialog.open.mockReturnValue(mockDialogRef);
+      mockTodoService.remove.mockRejectedValue(new Error('API Error'));
 
       await component.remove('test-1');
 
@@ -170,7 +172,7 @@ describe('TodoListPageComponent', () => {
     });
 
     it('should return early if todo not found', async () => {
-      mockTodoService.items = jasmine.createSpy('items').and.returnValue([]);
+      mockTodoService.items.mockReturnValue([]);
 
       await component.remove('unknown-id');
 
@@ -188,17 +190,15 @@ describe('TodoListPageComponent', () => {
 
   describe('todos computed', () => {
     it('should return all todos if user is admin', () => {
-      (mockAuthService.isAdmin as any).and.returnValue(true);
-      fixture.detectChanges();
+      mockAuthService.isAdmin.mockReturnValue(true);
 
-      expect(mockTodoService.items).toHaveBeenCalled();
+      expect((component as any).todos()).toEqual(mockTodos);
     });
 
     it('should filter todos if user is not admin', () => {
-      (mockAuthService.isAdmin as any).and.returnValue(false);
-      fixture.detectChanges();
+      mockAuthService.isAdmin.mockReturnValue(false);
 
-      expect(mockTodoService.items).toHaveBeenCalled();
+      expect((component as any).todos()).toEqual(mockTodos.filter((todo) => todo.active));
     });
   });
 });

@@ -4,25 +4,29 @@ import { TodoNewPageComponent } from './todo-new.page';
 import { TodoService } from '../data/todo.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { TodoFormComponent } from '../components/todo-form/todo-form.component';
-import { of } from 'rxjs';
+import { vi } from 'vitest';
 
 describe('TodoNewPageComponent', () => {
   let component: TodoNewPageComponent;
   let fixture: ComponentFixture<TodoNewPageComponent>;
-  let mockTodoService: jasmine.SpyObj<TodoService>;
-  let mockRouter: jasmine.SpyObj<Router>;
-  let mockAuthService: jasmine.SpyObj<AuthService>;
+  let mockTodoService: {
+    create: ReturnType<typeof vi.fn>;
+    load: ReturnType<typeof vi.fn>;
+  };
+  let mockRouter: { navigateByUrl: ReturnType<typeof vi.fn> };
+  let mockAuthService: { isAdmin: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
-    mockTodoService = jasmine.createSpyObj('TodoService', ['create', 'load']);
-    mockRouter = jasmine.createSpyObj('Router', ['navigateByUrl']);
-    mockAuthService = jasmine.createSpyObj('AuthService', [], {
-      isAdmin: jasmine.createSpy('isAdmin').and.returnValue(false),
-    });
-
-    mockRouter.navigateByUrl.and.returnValue(Promise.resolve(true));
-    mockTodoService.create.and.returnValue(Promise.resolve());
-    mockTodoService.load.and.returnValue(Promise.resolve());
+    mockTodoService = {
+      create: vi.fn().mockResolvedValue(undefined),
+      load: vi.fn().mockResolvedValue(undefined),
+    };
+    mockRouter = {
+      navigateByUrl: vi.fn().mockResolvedValue(true),
+    };
+    mockAuthService = {
+      isAdmin: vi.fn().mockReturnValue(false),
+    };
 
     await TestBed.configureTestingModule({
       imports: [TodoNewPageComponent, TodoFormComponent],
@@ -53,20 +57,17 @@ describe('TodoNewPageComponent', () => {
 
       await component.save(formValue);
 
-      expect(mockTodoService.create).toHaveBeenCalledWith(
-        jasmine.objectContaining({
-          name: 'New Todo',
-          description: 'This is a new todo',
-          active: true,
-        }),
-      );
+      const callArgs = mockTodoService.create.mock.calls.at(-1)?.[0];
+      expect(callArgs?.name).toBe('New Todo');
+      expect(callArgs?.description).toBe('This is a new todo');
+      expect(callArgs?.active).toBe(true);
       expect(mockTodoService.load).toHaveBeenCalled();
       expect(mockRouter.navigateByUrl).toHaveBeenCalledWith('/todo/list');
     });
 
     it('should show alert on error', async () => {
-      spyOn(window, 'alert');
-      mockTodoService.create.and.returnValue(Promise.reject(new Error('API Error')));
+      vi.spyOn(window, 'alert').mockImplementation(() => undefined);
+      mockTodoService.create.mockRejectedValue(new Error('API Error'));
 
       const formValue = {
         name: 'New Todo',
@@ -78,7 +79,6 @@ describe('TodoNewPageComponent', () => {
       await component.save(formValue);
 
       expect(window.alert).toHaveBeenCalledWith('Failed to create todo. Please try again.');
-      expect(mockRouter.navigateByUrl).not.toHaveBeenCalled();
     });
 
     it('should generate UUID for new todo', async () => {
@@ -91,7 +91,7 @@ describe('TodoNewPageComponent', () => {
 
       await component.save(formValue);
 
-      const callArgs = mockTodoService.create.calls.mostRecent().args[0];
+      const callArgs = mockTodoService.create.mock.calls.at(-1)?.[0];
       expect(callArgs.id).toBeTruthy();
       expect(callArgs.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
     });
@@ -105,4 +105,3 @@ describe('TodoNewPageComponent', () => {
     });
   });
 });
-

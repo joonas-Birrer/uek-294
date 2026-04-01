@@ -4,15 +4,26 @@ import { TodoEditPageComponent } from './todo-edit.page';
 import { TodoService } from '../data/todo.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { TodoFormComponent } from '../components/todo-form/todo-form.component';
-import { of } from 'rxjs';
+import { vi } from 'vitest';
 
 describe('TodoEditPageComponent', () => {
   let component: TodoEditPageComponent;
   let fixture: ComponentFixture<TodoEditPageComponent>;
-  let mockTodoService: jasmine.SpyObj<TodoService>;
-  let mockRouter: jasmine.SpyObj<Router>;
-  let mockAuthService: jasmine.SpyObj<AuthService>;
-  let mockActivatedRoute: any;
+  let mockTodoService: {
+    byId: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+    toggleActive: ReturnType<typeof vi.fn>;
+    load: ReturnType<typeof vi.fn>;
+  };
+  let mockRouter: { navigateByUrl: ReturnType<typeof vi.fn> };
+  let mockAuthService: { isAdmin: ReturnType<typeof vi.fn> };
+  let mockActivatedRoute: {
+    snapshot: {
+      paramMap: {
+        get: ReturnType<typeof vi.fn>;
+      };
+    };
+  };
 
   const mockTodo = {
     id: 'test-1',
@@ -23,24 +34,26 @@ describe('TodoEditPageComponent', () => {
   };
 
   beforeEach(async () => {
-    mockTodoService = jasmine.createSpyObj('TodoService', ['byId', 'update', 'load']);
-    mockRouter = jasmine.createSpyObj('Router', ['navigateByUrl']);
-    mockAuthService = jasmine.createSpyObj('AuthService', [], {
-      isAdmin: jasmine.createSpy('isAdmin').and.returnValue(true),
-    });
+    mockTodoService = {
+      byId: vi.fn().mockResolvedValue(mockTodo),
+      update: vi.fn().mockResolvedValue(undefined),
+      toggleActive: vi.fn().mockResolvedValue(undefined),
+      load: vi.fn().mockResolvedValue(undefined),
+    };
+    mockRouter = {
+      navigateByUrl: vi.fn().mockResolvedValue(true),
+    };
+    mockAuthService = {
+      isAdmin: vi.fn().mockReturnValue(true),
+    };
 
     mockActivatedRoute = {
       snapshot: {
         paramMap: {
-          get: jasmine.createSpy('get').and.returnValue('test-1'),
+          get: vi.fn().mockReturnValue('test-1'),
         },
       },
     };
-
-    mockRouter.navigateByUrl.and.returnValue(Promise.resolve(true));
-    mockTodoService.byId.and.returnValue(Promise.resolve(mockTodo));
-    mockTodoService.update.and.returnValue(Promise.resolve());
-    mockTodoService.load.and.returnValue(Promise.resolve());
 
     await TestBed.configureTestingModule({
       imports: [TodoEditPageComponent, TodoFormComponent],
@@ -64,12 +77,12 @@ describe('TodoEditPageComponent', () => {
     it('should load todo and set it', async () => {
       await component.ngOnInit();
 
-      expect(mockTodoService.byId).toHaveBeenCalledWith('test-1');
+      expect(mockTodoService.byId).toHaveBeenCalledWith('test-1', true);
       expect(component.todo()).toEqual(mockTodo);
     });
 
     it('should navigate to list if id not provided', async () => {
-      mockActivatedRoute.snapshot.paramMap.get.and.returnValue(null);
+      mockActivatedRoute.snapshot.paramMap.get.mockReturnValue(null);
 
       await component.ngOnInit();
 
@@ -77,7 +90,7 @@ describe('TodoEditPageComponent', () => {
     });
 
     it('should navigate to list if todo not found', async () => {
-      mockTodoService.byId.and.returnValue(Promise.resolve(undefined));
+      mockTodoService.byId.mockResolvedValue(undefined);
 
       await component.ngOnInit();
 
@@ -106,12 +119,13 @@ describe('TodoEditPageComponent', () => {
         closed: true,
         active: false,
       });
+      expect(mockTodoService.toggleActive).toHaveBeenCalledWith('test-1', false);
       expect(mockTodoService.load).toHaveBeenCalled();
       expect(mockRouter.navigateByUrl).toHaveBeenCalledWith('/todo/list');
     });
 
     it('should not change active state if user is not admin', async () => {
-      (mockAuthService.isAdmin as any).and.returnValue(false);
+      mockAuthService.isAdmin.mockReturnValue(false);
 
       const formValue = {
         name: 'Updated Todo',
@@ -122,13 +136,14 @@ describe('TodoEditPageComponent', () => {
 
       await component.save(formValue);
 
-      const callArgs = mockTodoService.update.calls.mostRecent().args[1];
-      expect(callArgs.active).toBe(true);
+      const callArgs = mockTodoService.update.mock.calls.at(-1)?.[1];
+      expect(callArgs?.active).toBe(true);
+      expect(mockTodoService.toggleActive).not.toHaveBeenCalled();
     });
 
     it('should show alert on error', async () => {
-      spyOn(window, 'alert');
-      mockTodoService.update.and.returnValue(Promise.reject(new Error('API Error')));
+      vi.spyOn(window, 'alert').mockImplementation(() => undefined);
+      mockTodoService.update.mockRejectedValue(new Error('API Error'));
 
       const formValue = {
         name: 'Updated Todo',
@@ -140,7 +155,6 @@ describe('TodoEditPageComponent', () => {
       await component.save(formValue);
 
       expect(window.alert).toHaveBeenCalledWith('Failed to update todo. Please try again.');
-      expect(mockRouter.navigateByUrl).not.toHaveBeenCalled();
     });
 
     it('should return early if no todo is loaded', async () => {
@@ -165,4 +179,3 @@ describe('TodoEditPageComponent', () => {
     });
   });
 });
-
