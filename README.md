@@ -1,4 +1,4 @@
-## Persoenliches Fazit
+## Persönliches Fazit
 
 In diesem Projekt habe ich viel gelernt. 
 Als ich das Projekt gestartet habe, hatte ich gar keine Erfahrung von Angular. 
@@ -10,9 +10,6 @@ Ich habe das Gefühl, dass ich viel gelernt habe und dass ich mich weiterentwick
 
 Ich habe auch recht viel über AI gelernt und die gespräche darüber sehr genossen.
 
-Mit meiner Planung bin ich insgesamt zufrieden. Ausser, dass ich die Issues zuerst in das falsche repo gepushed habe.
-Ich habe die Aufgaben in kleinere Schritte aufgeteilt und dadurch den Überblick behalten. Beim Vergleichen von Aufwandsschätzung und effektivem Aufwand habe ich gemerkt, wo ich noch realistischer planen kann.
-Allerdings habe ich den aufwand ein wenig "überschätzt", was aber nicht schlimm ist, da ich so immer genug Zeit hatte, um die Aufgaben zu erledigen.
-Insgesamt bin ich zufrieden mit meiner Planung und der Umsetzung des Projekts. Ich habe viel gelernt und mich weiterentwickelt, was das wichtigste ist.
-
-
+Mit meiner Planung bin ich nicht ganz zufrieden. Ich habe die Issues zuerst in das falsche repo geschreiben, die zeiten falsch eingeschätzt, die Aufgaben nicht richtig aufgeteilt ect.
+Muss das definitif besser machen.
+Aber was solls. Wenn man nie fehler macht, lernt man auch nicht daraus.
