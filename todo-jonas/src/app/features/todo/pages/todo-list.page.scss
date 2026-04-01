@@ -20,10 +20,10 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   font-weight: 700;
-  min-height: 36px;
+  min-height: 40px;
   background: #000;
   color: #fff;
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .rows {
@@ -43,7 +43,7 @@
 }
 
 .actions-head {
-  gap: 0.1rem;
+  gap: 0.2rem;
 }
 
 .actions-head .mat-mdc-icon-button {
