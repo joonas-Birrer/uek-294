@@ -105,7 +105,7 @@ export class TodoService {
       name: dto.name,
       description: dto.description,
       closed: false,
-      active: dto.active,
+      active: true,
     };
     const next = [...this.items(), newItem];
     this.items.set(next);
@@ -203,4 +203,3 @@ export class TodoService {
     }
   }
 }
-

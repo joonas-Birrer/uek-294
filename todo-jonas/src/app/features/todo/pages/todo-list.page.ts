@@ -49,6 +49,19 @@ export class TodoListPageComponent {
       alert('Failed to update todo. Please try again.');
     }
   }
+  async toggleActive(event: { id: string; checked: boolean }): Promise<void> {
+    if (!this.authService.isAdmin()) {
+      return;
+    }
+
+    try {
+      await this.todoService.toggleActive(event.id, event.checked);
+      await this.refresh();
+    } catch (error) {
+      console.error('Error toggling todo active state:', error);
+      alert('Failed to update active state. Please try again.');
+    }
+  }
   async remove(id: string): Promise<void> {
     if (!this.authService.isAdmin()) {
       return;

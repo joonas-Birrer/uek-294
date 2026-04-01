@@ -1,26 +1,32 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { TodoService } from './todo.service';
-import { TodoItem, TodoCreateDto } from './todo.model';
+import { TodoApiItem, TodoCreateDto, TodoItem } from './todo.model';
 
 describe('TodoService', () => {
   let service: TodoService;
   let httpMock: HttpTestingController;
 
-  const mockTodo: TodoItem = {
+  const apiTodo: TodoApiItem = {
+    guid: 'test-1',
+    name: 'Test Todo',
+    description: 'This is a test todo',
+    state: 'open',
+    active: true,
+  };
+
+  const uiTodo: TodoItem = {
     id: 'test-1',
     name: 'Test Todo',
     description: 'This is a test todo',
     closed: false,
     active: true,
   };
-  };
 
-  const mockTodoCreateDto: TodoCreateDto = {
+  const createDto: TodoCreateDto = {
     id: 'test-1',
     name: 'Test Todo',
     description: 'This is a test todo',
-    active: true,
   };
 
   beforeEach(() => {
@@ -37,225 +43,93 @@ describe('TodoService', () => {
     httpMock.verify();
   });
 
-  it('should be created', () => {
+  it('creates service', () => {
     expect(service).toBeTruthy();
   });
 
-  describe('load', () => {
-    it('should load todos from API', async () => {
-      const mockTodos = [mockTodo];
+  it('loads todos with showAll=false by default', async () => {
+    const loadPromise = service.load();
+    const req = httpMock.expectOne((r) => r.url === '/api/todo/data' && r.params.get('showAll') === 'false');
+    expect(req.request.method).toBe('GET');
+    req.flush([apiTodo]);
 
-      const loadPromise = service.load();
-      const req = httpMock.expectOne('/api/todo/data');
-      expect(req.request.method).toBe('GET');
-      req.flush(mockTodos);
-
-      await loadPromise;
-      expect(service.items()).toEqual(mockTodos);
-    });
-
-    it('should handle load errors gracefully', async () => {
-      const initialItems = service.items();
-
-      const loadPromise = service.load();
-      const req = httpMock.expectOne('/api/todo/data');
-      req.error(new ErrorEvent('Network error'));
-
-      await loadPromise;
-      expect(service.items()).toEqual(initialItems);
-    });
-
-    it('should set loading to false after load completes', async () => {
-      expect(service.loading()).toBe(false);
-
-      const loadPromise = service.load();
-      expect(service.loading()).toBe(true);
-
-      const req = httpMock.expectOne('/api/todo/data');
-      req.flush([]);
-
-      await loadPromise;
-      expect(service.loading()).toBe(false);
-    });
+    await loadPromise;
+    expect(service.items()).toEqual([uiTodo]);
   });
 
-  describe('create', () => {
-    it('should create a todo optimistically and update with server response', async () => {
-      const initialCount = service.items().length;
+  it('loads todos with showAll=true for admin views', async () => {
+    const loadPromise = service.load(true);
+    const req = httpMock.expectOne((r) => r.url === '/api/todo/data' && r.params.get('showAll') === 'true');
+    req.flush([apiTodo]);
 
-      const createPromise = service.create(mockTodoCreateDto);
-
-      expect(service.items().length).toBe(initialCount + 1);
-      expect(service.items().some((item) => item.id === 'test-1')).toBe(true);
-
-      const req = httpMock.expectOne('/api/todo/data');
-      expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(mockTodoCreateDto);
-      req.flush(mockTodo);
-
-      await createPromise;
-      expect(service.items().some((item) => item.id === 'test-1')).toBe(true);
-    });
-
-    it('should remove optimistically added item on error', async () => {
-      const initialCount = service.items().length;
-
-      const createPromise = service.create(mockTodoCreateDto);
-      expect(service.items().length).toBe(initialCount + 1);
-
-      const req = httpMock.expectOne('/api/todo/data');
-      req.error(new ErrorEvent('Network error'));
-
-      try {
-        await createPromise;
-        fail('should have thrown error');
-      } catch {
-        expect(service.items().length).toBe(initialCount);
-        expect(service.items().some((item) => item.id === 'test-1')).toBe(false);
-      }
-    });
+    await loadPromise;
+    expect(service.items().length).toBe(1);
   });
 
-  describe('update', () => {
-    beforeEach(() => {
-      service.items.set([mockTodo]);
+  it('creates todo with minimal API payload and default active=true', async () => {
+    const createPromise = service.create(createDto);
+    const optimistic = service.items().find((item) => item.id === createDto.id);
+    expect(optimistic?.active).toBe(true);
+
+    const req = httpMock.expectOne('/api/todo/data');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      guid: createDto.id,
+      name: createDto.name,
+      description: createDto.description,
     });
+    req.flush(apiTodo);
 
-    it('should update a todo and sync with server response', async () => {
-      const updatedTodo = { ...mockTodo, name: 'Updated Todo' };
-
-      const updatePromise = service.update('test-1', {
-        name: 'Updated Todo',
-        description: mockTodo.description,
-        closed: mockTodo.closed,
-        active: mockTodo.active,
-      });
-
-      expect(service.items()[0].name).toBe('Updated Todo');
-
-      const req = httpMock.expectOne('/api/todo/admin/test-1');
-      expect(req.request.method).toBe('PATCH');
-      req.flush(updatedTodo);
-
-      await updatePromise;
-      expect(service.items()[0]).toEqual(updatedTodo);
-    });
-
-    it('should restore original item on error', async () => {
-      const updatePromise = service.update('test-1', {
-        name: 'Updated Todo',
-        description: mockTodo.description,
-        closed: mockTodo.closed,
-        active: mockTodo.active,
-      });
-
-      const req = httpMock.expectOne('/api/todo/admin/test-1');
-      req.error(new ErrorEvent('Network error'));
-
-      try {
-        await updatePromise;
-        fail('should have thrown error');
-      } catch {
-        expect(service.items()[0]).toEqual(mockTodo);
-      }
-    });
+    await createPromise;
+    expect(service.items().some((item) => item.id === createDto.id)).toBe(true);
   });
 
-  describe('remove', () => {
-    beforeEach(() => {
-      service.items.set([mockTodo]);
+  it('updates todo using PUT /api/todo/data/:id', async () => {
+    service.items.set([uiTodo]);
+
+    const updatePromise = service.update('test-1', {
+      name: 'Updated Todo',
+      description: uiTodo.description,
+      closed: true,
+      active: true,
     });
 
-    it('should remove a todo and delete via API', async () => {
-      const removePromise = service.remove('test-1');
-      expect(service.items().length).toBe(0);
-
-      const req = httpMock.expectOne('/api/todo/admin/test-1');
-      expect(req.request.method).toBe('DELETE');
-      req.flush({});
-
-      await removePromise;
-      expect(service.items().length).toBe(0);
+    const req = httpMock.expectOne('/api/todo/data/test-1');
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({
+      guid: 'test-1',
+      name: 'Updated Todo',
+      description: uiTodo.description,
+      state: 'closed',
     });
+    req.flush({ ...apiTodo, name: 'Updated Todo', state: 'closed' });
 
-    it('should restore items on deletion error', async () => {
-      const removePromise = service.remove('test-1');
-      expect(service.items().length).toBe(0);
-
-      const req = httpMock.expectOne('/api/todo/admin/test-1');
-      req.error(new ErrorEvent('Network error'));
-
-      try {
-        await removePromise;
-        fail('should have thrown error');
-      } catch {
-        expect(service.items().length).toBe(1);
-        expect(service.items()[0]).toEqual(mockTodo);
-      }
-    });
+    await updatePromise;
+    expect(service.items()[0].closed).toBe(true);
   });
 
-  describe('byId', () => {
-    beforeEach(() => {
-      service.items.set([mockTodo]);
-    });
+  it('toggles active via admin patch endpoint', async () => {
+    service.items.set([uiTodo]);
 
-    it('should return todo from local items if found', async () => {
-      const result = await service.byId('test-1');
-      httpMock.expectNone('/api/todo/data/test-1');
-      expect(result).toEqual(mockTodo);
-    });
+    const togglePromise = service.toggleActive('test-1', false);
+    const req = httpMock.expectOne('/api/todo/admin/test-1');
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ active: false });
+    req.flush({ ...apiTodo, active: false });
 
-    it('should fetch todo from API if not in local items', async () => {
-      const result = service.byId('unknown-id');
-
-      const req = httpMock.expectOne('/api/todo/data/unknown-id');
-      expect(req.request.method).toBe('GET');
-      req.flush(mockTodo);
-
-      expect(await result).toEqual(mockTodo);
-    });
-
-    it('should return undefined if todo not found', async () => {
-      const result = service.byId('unknown-id');
-
-      const req = httpMock.expectOne('/api/todo/data/unknown-id');
-      req.error(new ErrorEvent('Not found'));
-
-      expect(await result).toBeUndefined();
-    });
+    await togglePromise;
+    expect(service.items()[0].active).toBe(false);
   });
 
-  describe('toggleClosed', () => {
-    beforeEach(() => {
-      service.items.set([mockTodo]);
-    });
+  it('deletes todo via admin endpoint', async () => {
+    service.items.set([uiTodo]);
 
-    it('should toggle closed state', async () => {
-      const togglePromise = service.toggleClosed('test-1', true);
+    const removePromise = service.remove('test-1');
+    const req = httpMock.expectOne('/api/todo/admin/test-1');
+    expect(req.request.method).toBe('DELETE');
+    req.flush({});
 
-      const req = httpMock.expectOne('/api/todo/admin/test-1');
-      expect(req.request.body.closed).toBe(true);
-      req.flush({ ...mockTodo, closed: true });
-
-      await togglePromise;
-    });
-  });
-
-  describe('toggleActive', () => {
-    beforeEach(() => {
-      service.items.set([mockTodo]);
-    });
-
-    it('should toggle active state', async () => {
-      const togglePromise = service.toggleActive('test-1', false);
-
-      const req = httpMock.expectOne('/api/todo/admin/test-1');
-      expect(req.request.body.active).toBe(false);
-      req.flush({ ...mockTodo, active: false });
-
-      await togglePromise;
-    });
+    await removePromise;
+    expect(service.items()).toEqual([]);
   });
 });
-

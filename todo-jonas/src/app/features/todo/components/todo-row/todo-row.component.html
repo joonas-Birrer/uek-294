@@ -13,6 +13,20 @@
       <span>{{ todo().closed ? 'closed' : 'open' }}</span>
     </span>
   </button>
+  <div class="cell active">
+    @if (isAdmin()) {
+      <mat-checkbox
+        [checked]="todo().active"
+        (change)="activeChanged.emit({ id: todo().id, checked: $event.checked })"
+      >
+        active
+      </mat-checkbox>
+    } @else {
+      <span class="active-pill" [class.on]="todo().active" [class.off]="!todo().active">
+        {{ todo().active ? 'active' : 'inactive' }}
+      </span>
+    }
+  </div>
   <div class="cell actions">
     <a mat-icon-button [routerLink]="['/todo/edit', todo().id]" aria-label="Edit todo">
       <mat-icon>edit</mat-icon>
@@ -24,4 +38,3 @@
     }
   </div>
 </div>
-

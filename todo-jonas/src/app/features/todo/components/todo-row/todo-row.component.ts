@@ -3,11 +3,12 @@ import { TodoItem } from '../../data/todo.model';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 @Component({
   selector: 'app-todo-row',
   standalone: true,
-  imports: [MatButtonModule, MatIconModule, RouterLink],
+  imports: [MatButtonModule, MatIconModule, MatCheckboxModule, RouterLink],
   templateUrl: './todo-row.component.html',
   styleUrl: './todo-row.component.scss',
 })
@@ -17,6 +18,6 @@ export class TodoRowComponent {
   readonly isAdmin = input(false);
 
   readonly closedChanged = output<{ id: string; checked: boolean }>();
+  readonly activeChanged = output<{ id: string; checked: boolean }>();
   readonly deleteClicked = output<string>();
 }
-

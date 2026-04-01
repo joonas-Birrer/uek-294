@@ -26,7 +26,6 @@ export class TodoNewPageComponent {
         id: crypto.randomUUID(),
         name: value.name,
         description: value.description,
-        active: value.active,
       });
 
       await this.todoService.load();

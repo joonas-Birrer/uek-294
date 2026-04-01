@@ -35,7 +35,6 @@ export interface TodoCreateDto {
   id: string;
   name: string;
   description: string;
-  active: boolean;
 }
 
 export interface TodoUpdateDto {
@@ -44,4 +43,3 @@ export interface TodoUpdateDto {
   closed: boolean;
   active: boolean;
 }
-
