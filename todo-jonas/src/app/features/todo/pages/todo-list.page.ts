@@ -72,11 +72,10 @@ export class TodoListPageComponent {
     }
 
     await this.todoService.remove(id);
-    await this.todoService.load();
+    await this.refresh();
   }
 
   protected createNew(): void {
     void this.router.navigateByUrl('/todo/new');
   }
 }
-
