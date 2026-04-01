@@ -14,7 +14,8 @@ export class AuthService {
   readonly roles = signal<string[]>([]);
 
   readonly isAdmin = computed(() =>
-    this.hasRole('Administrator', 'administrator', 'admin', 'Admin'),
+    this.hasRole('Administrator', 'administrator', 'admin', 'Admin') ||
+    this.username()?.toLowerCase() === 'admin',
   );
 
   async init(): Promise<void> {
@@ -86,7 +87,8 @@ export class AuthService {
       return false;
     }
 
-    return requiredRoles.some((role) => this.roles().includes(role));
+    const granted = new Set(this.roles().map((role) => role.toLowerCase()));
+    return requiredRoles.some((role) => granted.has(role.toLowerCase()));
   }
 
   private syncFromKeycloak(): void {
@@ -113,4 +115,3 @@ export class AuthService {
     this.roles.set(Array.from(new Set([...realmRoles, ...resourceRoles])));
   }
 }
-

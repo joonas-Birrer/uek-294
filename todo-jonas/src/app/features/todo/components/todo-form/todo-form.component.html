@@ -50,7 +50,7 @@
           </mat-button-toggle-group>
         }
 
-        @if (isAdmin()) {
+        @if (showActive() && isAdmin()) {
           <mat-checkbox formControlName="active">Active</mat-checkbox>
         }
 
