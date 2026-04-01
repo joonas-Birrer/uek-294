@@ -17,6 +17,7 @@ export class TodoRowComponent {
   readonly isAdmin = input(false);
 
   readonly closedChanged = output<{ id: string; checked: boolean }>();
+  readonly activeChanged = output<{ id: string; active: boolean }>();
   readonly deleteClicked = output<string>();
 }
 

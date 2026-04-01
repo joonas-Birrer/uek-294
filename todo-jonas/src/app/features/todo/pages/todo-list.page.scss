@@ -26,6 +26,10 @@
   font-size: 20px;
 }
 
+.column-header.admin-view {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
 .rows {
   border-right: 2px solid #111;
   overflow: hidden;
