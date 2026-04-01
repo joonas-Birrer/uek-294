@@ -17,7 +17,7 @@ export class TodoEditPageComponent {
   private readonly todoService = inject(TodoService);
   protected readonly authService = inject(AuthService);
 
-  protected readonly todo = signal<TodoItem | undefined>(undefined);
+  readonly todo = signal<TodoItem | undefined>(undefined);
 
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id');
@@ -26,7 +26,7 @@ export class TodoEditPageComponent {
       return;
     }
 
-    const item = await this.todoService.byId(id);
+    const item = await this.todoService.byId(id, this.authService.isAdmin());
     if (!item) {
       await this.router.navigateByUrl('/todo/list');
       return;
@@ -35,7 +35,7 @@ export class TodoEditPageComponent {
     this.todo.set(item);
   }
 
-  protected async save(value: {
+  async save(value: {
     name: string;
     description: string;
     closed: boolean;
@@ -46,19 +46,29 @@ export class TodoEditPageComponent {
       return;
     }
 
-    await this.todoService.update(item.id, {
-      name: value.name,
-      description: value.description,
-      closed: value.closed,
-      active: this.authService.isAdmin() ? value.active : item.active,
-    });
+    try {
+      const nextActive = this.authService.isAdmin() ? value.active : item.active;
 
-    await this.todoService.load();
-    await this.router.navigateByUrl('/todo/list');
+      await this.todoService.update(item.id, {
+        name: value.name,
+        description: value.description,
+        closed: value.closed,
+        active: nextActive,
+      });
+
+      if (this.authService.isAdmin() && nextActive !== item.active) {
+        await this.todoService.toggleActive(item.id, nextActive);
+      }
+
+      await this.todoService.load();
+      await this.router.navigateByUrl('/todo/list');
+    } catch (error) {
+      console.error('Error updating todo:', error);
+      alert('Failed to update todo. Please try again.');
+    }
   }
 
-  protected cancel(): void {
+  cancel(): void {
     void this.router.navigateByUrl('/todo/list');
   }
 }
-

@@ -36,6 +36,7 @@ export class TodoFormComponent {
   readonly submitLabel = input('save');
   readonly showGuid = input(false);
   readonly showClosed = input(false);
+  readonly showActive = input(false);
   readonly isAdmin = input(false);
   readonly initialValue = input<Partial<TodoItem>>({});
 

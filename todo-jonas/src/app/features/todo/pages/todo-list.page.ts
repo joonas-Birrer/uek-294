@@ -40,18 +40,23 @@ export class TodoListPageComponent {
   });
 
   async ngOnInit(): Promise<void> {
-    await this.todoService.load();
+    await this.todoService.load(this.authService.isAdmin());
   }
 
-  protected async refresh(): Promise<void> {
-    await this.todoService.load();
+  async refresh(): Promise<void> {
+    await this.todoService.load(this.authService.isAdmin());
   }
 
-  protected async toggleClosed(event: { id: string; checked: boolean }): Promise<void> {
-    await this.todoService.toggleClosed(event.id, event.checked);
+  async toggleClosed(event: { id: string; checked: boolean }): Promise<void> {
+    try {
+      await this.todoService.toggleClosed(event.id, event.checked);
+    } catch (error) {
+      console.error('Error toggling todo closed state:', error);
+      alert('Failed to update todo. Please try again.');
+    }
   }
 
-  protected async remove(id: string): Promise<void> {
+  async remove(id: string): Promise<void> {
     if (!this.authService.isAdmin()) {
       return;
     }
@@ -71,11 +76,21 @@ export class TodoListPageComponent {
       return;
     }
 
+<<<<<<< HEAD
     await this.todoService.remove(id);
     await this.refresh();
+=======
+    try {
+      await this.todoService.remove(id);
+      await this.refresh();
+    } catch (error) {
+      console.error('Error deleting todo:', error);
+      alert('Failed to delete todo. Please try again.');
+    }
+>>>>>>> bdc744b (fix(todo): align auth/api flows and role visibility behavior)
   }
 
-  protected createNew(): void {
+  createNew(): void {
     void this.router.navigateByUrl('/todo/new');
   }
 }
