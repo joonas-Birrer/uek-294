@@ -1,15 +1,18 @@
-# uek-294
-
-## Abgabe Todo Management
-
-Dieses Repository enthaelt die UEK-294 Abschlussaufgabe mit einer Angular Todo-Anwendung, Keycloak-Login und Todo-API Integration.
-
 ## Persoenliches Fazit
 
-Die Abschlussaufgabe war fuer mich ein guter Abschluss vom UEK-294, weil ich viele Themen zusammenhaengend umsetzen musste: Routing, Guards, Authentisierung mit Keycloak, Services fuer API-Zugriffe und sauberes UI mit Komponenten.
+In diesem Projekt habe ich viel gelernt. 
+Als ich das Projekt gestartet habe, hatte ich gar keine Erfahrung von Angular. 
+Jetzt, nach dem Projekt, habe ich ein gutes Verständnis von Angular und wie man damit arbeitet.
+Ich bin zufrieden mit dem Ergebnis, das ich erreicht habe und ich denke, dass ich viel gelernt habe.
 
-Am meisten gelernt habe ich beim Arbeiten mit Rollen und Guards. Der Unterschied zwischen Admin- und User-Rechten hat gezeigt, wie wichtig klare Regeln im Frontend sind, vor allem bei Deep-Links und kritischen Aktionen wie Loeschen.
+Das ÜK hat mir generell gefallen. Mir war es recht, so wie es war. Also ohne die ganzen workshops und so.
+Ich habe das Gefühl, dass ich viel gelernt habe und dass ich mich weiterentwickelt habe.
 
-Auch der Gitflow-Teil war lehrreich. Mit Milestones, Issues, Feature-Branches und Releases bleibt die Umsetzung besser nachvollziehbar als bei einzelnen grossen Commits.
+Ich habe auch recht viel über AI gelernt und die gespräche darüber sehr genossen.
 
-Rueckblickend wuerde ich bei einem naechsten Projekt frueher mit einer klaren Branch-Protection starten, damit wirklich jeder Schritt nur per Pull Request gemerged wird.
+Mit meiner Planung bin ich insgesamt zufrieden. Ausser, dass ich die Issues zuerst in das falsche repo gepushed habe.
+Ich habe die Aufgaben in kleinere Schritte aufgeteilt und dadurch den Überblick behalten. Beim Vergleichen von Aufwandsschätzung und effektivem Aufwand habe ich gemerkt, wo ich noch realistischer planen kann.
+Allerdings habe ich den aufwand ein wenig "überschätzt", was aber nicht schlimm ist, da ich so immer genug Zeit hatte, um die Aufgaben zu erledigen.
+Insgesamt bin ich zufrieden mit meiner Planung und der Umsetzung des Projekts. Ich habe viel gelernt und mich weiterentwickelt, was das wichtigste ist.
+
+
