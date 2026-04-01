@@ -4,10 +4,13 @@
       <app-todo-header title="Todos"></app-todo-header>
 
       <div class="table-wrap">
-        <div class="column-header">
+        <div class="column-header" [class.admin-view]="authService.isAdmin()">
           <div>Titel</div>
           <div>Description</div>
           <div>State</div>
+          @if (authService.isAdmin()) {
+            <div>Active</div>
+          }
           <div class="actions-head">
             <button mat-icon-button type="button" aria-label="New" (click)="createNew()">
               <mat-icon>add</mat-icon>
@@ -30,6 +33,7 @@
                 [index]="i"
                 [isAdmin]="authService.isAdmin()"
                 (closedChanged)="toggleClosed($event)"
+                (activeChanged)="toggleActive($event)"
                 (deleteClicked)="remove($event)"
               ></app-todo-row>
             }

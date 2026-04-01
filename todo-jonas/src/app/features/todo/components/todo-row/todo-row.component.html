@@ -1,4 +1,4 @@
-<div class="row" [class.even]="index() % 2 === 0">
+<div class="row" [class.even]="index() % 2 === 0" [class.admin-view]="isAdmin()">
   <div class="cell name">{{ todo().name }}</div>
   <div class="cell description">{{ todo().description }}</div>
   <button
@@ -13,6 +13,18 @@
       <span>{{ todo().closed ? 'closed' : 'open' }}</span>
     </span>
   </button>
+
+  @if (isAdmin()) {
+    <div class="cell active">
+      <input
+        type="checkbox"
+        [checked]="todo().active"
+        aria-label="Toggle active state"
+        (change)="activeChanged.emit({ id: todo().id, active: $any($event.target).checked })"
+      />
+    </div>
+  }
+
   <div class="cell actions">
     <a mat-icon-button [routerLink]="['/todo/edit', todo().id]" aria-label="Edit todo">
       <mat-icon>edit</mat-icon>

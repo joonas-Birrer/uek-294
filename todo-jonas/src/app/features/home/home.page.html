@@ -2,10 +2,15 @@
   <div class="panel">
     <header class="title-bar">
       <mat-icon>home</mat-icon>
-      <span>Home!</span>
+      <span>Home</span>
     </header>
 
     <div class="body">
+      <section class="app-info">
+        <h2>{{ appName }}</h2>
+        <p>Autor: {{ author }}</p>
+      </section>
+
       <section class="user-panel">
         <h2>Benutzer</h2>
         <p>{{ authService.authenticated() ? 'Angemeldet als ' + authService.username() : 'Nicht angemeldet' }}</p>

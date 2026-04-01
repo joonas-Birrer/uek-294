@@ -10,7 +10,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { TodoDeleteDialogComponent } from '../components/todo-delete-dialog/todo-delete-dialog.component';
 import { firstValueFrom } from 'rxjs';
-
 @Component({
   selector: 'app-todo-list-page',
   standalone: true,
@@ -29,54 +28,66 @@ export class TodoListPageComponent {
   protected readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
-
   protected readonly todos = computed(() => {
     const all = this.todoService.items();
     if (this.authService.isAdmin()) {
       return all;
     }
-
     return all.filter((todo) => todo.active);
   });
-
   async ngOnInit(): Promise<void> {
-    await this.todoService.load();
+    await this.todoService.load(this.authService.isAdmin());
+  }
+  async refresh(): Promise<void> {
+    await this.todoService.load(this.authService.isAdmin());
+  }
+  async toggleClosed(event: { id: string; checked: boolean }): Promise<void> {
+    try {
+      await this.todoService.toggleClosed(event.id, event.checked);
+    } catch (error) {
+      console.error('Error toggling todo closed state:', error);
+      alert('Failed to update todo. Please try again.');
+    }
   }
 
-  protected async refresh(): Promise<void> {
-    await this.todoService.load();
-  }
-
-  protected async toggleClosed(event: { id: string; checked: boolean }): Promise<void> {
-    await this.todoService.toggleClosed(event.id, event.checked);
-  }
-
-  protected async remove(id: string): Promise<void> {
+  async toggleActive(event: { id: string; active: boolean }): Promise<void> {
     if (!this.authService.isAdmin()) {
       return;
     }
 
+    try {
+      await this.todoService.toggleActive(event.id, event.active);
+    } catch (error) {
+      console.error('Error toggling todo active state:', error);
+      alert('Failed to update active state. Please try again.');
+    }
+  }
+
+  async remove(id: string): Promise<void> {
+    if (!this.authService.isAdmin()) {
+      return;
+    }
     const todo = this.todoService.items().find((entry) => entry.id === id);
     if (!todo) {
       return;
     }
-
     const dialogRef = this.dialog.open(TodoDeleteDialogComponent, {
       width: '310px',
       data: { name: todo.name },
     });
-
     const confirmed = await firstValueFrom(dialogRef.afterClosed());
     if (!confirmed) {
       return;
     }
-
-    await this.todoService.remove(id);
-    await this.todoService.load();
+    try {
+      await this.todoService.remove(id);
+      await this.refresh();
+    } catch (error) {
+      console.error('Error deleting todo:', error);
+      alert('Failed to delete todo. Please try again.');
+    }
   }
-
-  protected createNew(): void {
+  createNew(): void {
     void this.router.navigateByUrl('/todo/new');
   }
 }
-

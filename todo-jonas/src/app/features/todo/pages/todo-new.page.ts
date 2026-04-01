@@ -13,27 +13,31 @@ import { AuthService } from '../../../core/auth/auth.service';
 export class TodoNewPageComponent {
   private readonly todoService = inject(TodoService);
   private readonly router = inject(Router);
-  protected readonly authService = inject(AuthService);
+  readonly authService = inject(AuthService);
 
-  protected async save(value: {
+  async save(value: {
     name: string;
     description: string;
     closed: boolean;
     active: boolean;
   }): Promise<void> {
-    await this.todoService.create({
-      id: crypto.randomUUID(),
-      name: value.name,
-      description: value.description,
-      active: value.active,
-    });
+    try {
+      await this.todoService.create({
+        id: crypto.randomUUID(),
+        name: value.name,
+        description: value.description,
+        active: value.active,
+      });
 
-    await this.todoService.load();
-    await this.router.navigateByUrl('/todo/list');
+      await this.todoService.load();
+      await this.router.navigateByUrl('/todo/list');
+    } catch (error) {
+      console.error('Error creating todo:', error);
+      alert('Failed to create todo. Please try again.');
+    }
   }
 
-  protected cancel(): void {
+  cancel(): void {
     void this.router.navigateByUrl('/todo/list');
   }
 }
-

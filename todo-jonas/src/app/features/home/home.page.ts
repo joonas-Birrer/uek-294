@@ -13,6 +13,8 @@ import { AuthService } from '../../core/auth/auth.service';
 })
 export class HomePageComponent {
   protected readonly authService = inject(AuthService);
+  protected readonly appName = 'Abgabe-Todo-Management';
+  protected readonly author = 'Jonas';
 
   protected async login(): Promise<void> {
     await this.authService.login('/todo/list');
